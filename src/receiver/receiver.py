@@ -29,6 +29,7 @@ import fusb_options
 #                             the flow graph
 # /////////////////////////////////////////////////////////////////////////////
 
+
 class my_top_block(gr.top_block):
 
     def __init__(self, mod_class, demod_class,
@@ -59,7 +60,7 @@ global n_rcvd, n_right,data_rcvd,last_packet_time,pack_delay_f, pack_drop_pat,pa
 
 def main():
     mac_addr = '00:00:00:00:00:01'  
-    mac = receiverMAC(mac_addr)      
+    mac = receiverMAC(mac_addr,'simpsonrecvd.mp4')      
             
     def send_pkt(payload):
         tb.send_pkt(payload)
@@ -156,7 +157,10 @@ def main():
 
     tb.start()    # Start executing the flow graph (runs in separate threads)
     tb.wait()     # wait for it to finish
+   
                 
+
+
 
 if __name__ == '__main__':
     try:

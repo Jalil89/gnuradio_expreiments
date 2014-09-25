@@ -155,14 +155,13 @@ def main():
     tb.rxpath.set_carrier_threshold(options.carrier_threshold)
     print "Carrier sense threshold:", options.carrier_threshold, "dB"
     
-
     tb.start()    # Start executing the flow graph (runs in separate threads)
     f = open(options.filename,"rb")
     bytesread = f.read(1318)
     print "read bytes of size %u" % len(bytesread)
     while len(bytesread)>0:
         print "read bytes of size %u" % len(bytesread)
-        mac.Send(bytesread,1)
+        mac.Send(bytesread)
         bytesread = f.read(1318)
     tb.wait()     # wait for it to finish
                 

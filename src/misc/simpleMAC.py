@@ -4,31 +4,33 @@ from threading import Timer
 from simple_lock import SimpleLock
 
 class simpleMAC:
-    T_ACK = 1
-    T_PACKET = 2 
+    T_ACK ,T_PACKET = range(2) 
     
     
     def __init__(self,  mac_addr):
         self.pktno = 0 #enumerate sent packets
         self.mutex = SimpleLock()
-        self.timeout = 0 # seconds
+        self.timeout = 0.2 # seconds
         self.packet_delivered = False
+        self.task = None
         self.tb = None
         if len(mac_addr)!=len('xx:xx:xx:xx:xx:xx'):
             print 'malformed Mac address'
         self.MAC_ADDR = mac_addr
-        #self.mutex.lock()
+        self.mutex.lock()
         
         
     def set_tb(self,tb):
         self.tb = tb
         
     def __timeout(self,m):
-        print m
-        self.mutex.unlock()
+        if self.mutex.is_locked:
+            print m
+            self.mutex.unlock()
     
     def __set_timeout(self):
-        Timer(self.timeout,self.__timeout,args=["here"]).start()
+        self.task = Timer(self.timeout,self.__timeout,args=["here"])
+        self.task.start()
         
     def wait_delivery_status(self):
         # it function can only return if mutex will be unlocked 
@@ -53,7 +55,7 @@ class simpleMAC:
         self.tb.send_pkt(frame)
     
     def sendAck(self,pktno):
-        ack = struct.pack('!H',simpleMAC.T_ACK)+ struct.pack('!H',pktno)
+        ack = struct.pack('!H',simpleMAC.T_ACK)+ struct.pack('!H',pktno) + 'x'*100
         self.tb.send_pkt(ack)
         
     
@@ -61,9 +63,11 @@ class simpleMAC:
         print "ok = %5s  type=PACKET  pktno= %5d  datalen = %4d " % (ok,pktno,len(data))
         
     def handleAck(self,pktno):
+        print "received ack"
         if pktno == self.pktno:
             self.packet_delivered = True
             if mutex.is_locked():
+                self.task.cancel()
                 mutex.unlock()
             
     
@@ -73,6 +77,7 @@ class simpleMAC:
                 (frametype,) = struct.unpack('!H',frame[0:2])
                 (pktno,) = struct.unpack('!H', frame[2:4])
                 if frametype == simpleMAC.T_ACK:
+                    print "received ack"
                     self.handleAck(pktno)
                 elif frametype == simpleMAC.T_PACKET:
                     macAddr = frame[4:(4+maclen)]
